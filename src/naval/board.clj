@@ -15,13 +15,9 @@
   [board boat]
   (reduce place-boat-tile board boat))
 
-(defn has-boat?
-  [tile]
-  (contains? tile :boat))
+(def has-boat? :boat)
 
-(defn has-hit?
-  [tile]
-  (contains? tile :hit))
+(def has-hit? :hit)
 
 (defn has-healthy-boat?
   [tile]
@@ -29,9 +25,7 @@
     (has-boat? tile)
     (not (has-hit? tile))))
 
-(defn get-tile
-  [board tile]
-  (get-in board tile))
+(def get-tile get-in)
 
 (defn can-place-boat?
   "Return true if there is not a single boat in boat position"

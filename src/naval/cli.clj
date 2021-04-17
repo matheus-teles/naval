@@ -1,39 +1,39 @@
 (ns naval.cli
-  (:use clojure.string)
-  (:use naval.utils)
-  (:use naval.board))
+  (:require [clojure.string :as string]
+            [naval.utils :as utils]
+            [naval.board :as board]))
 
-(defn get-player-name
+(defn get-player-name!
   "Wait for the user to input their name"
   [player]
   (println "Digite aqui o nome do jogador" player)
-  (let [input (trim (read-line))]
+  (let [input (string/trim (read-line))]
     (if (empty? input)
-      (get-player-name player)
+      (get-player-name! player)
       input)))
 
 (defn valid-boat-position?
   "Validate if by both positions the boat given can be placed"
   [[initial-x initial-y] [final-x final-y] boat]
   (let [boat-size (:size boat)
-        horizontal-diff (abs (- initial-x final-x))
-        vertical-diff (abs (- initial-y final-y))]
+        horizontal-diff (utils/abs (- initial-x final-x))
+        vertical-diff (utils/abs (- initial-y final-y))]
     (and
-      (xor (= (inc horizontal-diff) boat-size) (= (inc vertical-diff) boat-size))
-      (xor (= horizontal-diff 0) (= vertical-diff 0)))))
+      (utils/xor (= (inc horizontal-diff) boat-size) (= (inc vertical-diff) boat-size))
+      (utils/xor (= horizontal-diff 0) (= vertical-diff 0)))))
 
-(defn get-position
+(defn get-position!
   "Wait for the user to input a position"
   [message]
   (println message)
-  (let [input (re-find #"(\d)\s(\d)" (trim (read-line)))]
+  (let [input (re-find #"(\d)\s(\d)" (string/trim (read-line)))]
     (if input
       (->> input
            rest
            (map #(Long/parseLong %)))
       (do
         (println "Posição inválida")
-        (get-position message)))))
+        (get-position! message)))))
 
 ; - -> Water
 ; O -> Miss
@@ -57,31 +57,32 @@
     (:boat tile)  "#"
     :else         "-"))
 
-(defn print-board
-  ([board] (print-board board translate-tile-enemy))
+(defn print-board!
+  ([board] (print-board! board translate-tile-enemy))
   ([board translation]
   (let [translate-row #(map translation %)]
     (println (->> board
-                  (map (comp (partial join " ") translate-row))
-                  (join "\n"))))))
+                  (map (comp (partial string/join " ") translate-row))
+                  (string/join "\n"))))))
 
-(defn place-boat-cli
+(defn place-boat!
   [board boat]
-  (print-board board translate-tile-self)
+  (print-board! board translate-tile-self)
   (println "Posicione o barco de tamanho" (:size boat))
-  (let [initial-position (get-position "Digite a posição inicial do barco da seguinte forma: x y")
-        final-position (get-position "Agora a posição final")]
-    (cond
-      (not (valid-boat-position? initial-position final-position boat)) (place-boat-cli board boat)
-      (can-place-boat? board (expand-initial-final initial-position final-position)) (place-boat board (expand-initial-final initial-position final-position))
-      :else (place-boat-cli board boat))))
+  (let [initial-position (get-position! "Digite a posição inicial do barco da seguinte forma: x y")
+        final-position (get-position! "Agora a posição final")
+        boat-tiles (utils/expand-initial-final initial-position final-position)]
+    (if (and (valid-boat-position? initial-position final-position boat)
+             (board/can-place-boat? board boat-tiles)) 
+      (board/place-boat board boat-tiles)
+      (place-boat! board boat))))
 
-(defn shoot
+(defn shoot!
   [board]
-  (print-board board)
-  (let [position (get-position "Digite a posição que você quer acertar")]
-    (if (has-hit? (get-tile board position))
+  (print-board! board)
+  (let [position (get-position! "Digite a posição que você quer acertar")]
+    (if (board/has-hit? (board/get-tile board position))
       (do
         (println "Já foi efetuado um diaparo para esse ponto")
-        (shoot board))
-      (hit-tile board position))))
+        (shoot! board))
+      (board/hit-tile board position))))

@@ -1,6 +1,6 @@
 (ns naval.core
-  (:use [naval.game]))
+  (:require [naval.game :as game]))
 
 (defn -main
   [& args]
-  (start-game))
+  (game/start!))

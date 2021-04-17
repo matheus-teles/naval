@@ -1,6 +1,7 @@
 (ns naval.game
-  (:use [naval.cli])
-  (:use [naval.board]))
+  ; :use não é muito comum, geralmente se use require com um alias, pra evitar conflito de nomes
+  (:require [naval.cli :as cli]
+            [naval.board :as board]))
 
 (def boats [{:size 2}
             {:size 3}
@@ -16,20 +17,20 @@
 
 (defn turn-phase
   [player-1 player-2]
-  (let [player-move (shoot (:board player-2))]
-    (if (end-game? player-move)
+  (let [player-move (cli/shoot! (:board player-2))]
+    (if (board/end-game? player-move)
       (println "Fim de jogo")
       (recur (assoc player-2 :board player-move) player-1))))
 
 ; {:player "Player Name" :board []}
-(defn start-game
+(defn start!
   []
   (let [player-1 {:player
-                  (get-player-name "1")
+                  (cli/get-player-name! "1")
                   :board
-                  (reduce place-boat-cli start-board boats)}
+                  (reduce cli/place-boat! start-board boats)}
         player-2 {:player
-                  (get-player-name "2")
+                  (cli/get-player-name! "2")
                   :board
-                  (reduce place-boat-cli start-board boats)}]
+                  (reduce cli/place-boat! start-board boats)}]
     (turn-phase player-1 player-2)))
